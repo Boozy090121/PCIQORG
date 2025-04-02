@@ -1,33 +1,46 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-  departments: [],
+  nodes: [],
+  edges: [],
   loading: false,
   error: null,
-  selectedDepartment: null
+  selectedNode: null
 };
 
 export const orgChartSlice = createSlice({
   name: 'orgChart',
   initialState,
   reducers: {
-    setDepartments: (state, action) => {
-      state.departments = action.payload;
+    setOrgChart: (state, action) => {
+      state.nodes = action.payload.nodes;
+      state.edges = action.payload.edges;
     },
-    addDepartment: (state, action) => {
-      state.departments.push(action.payload);
+    addNode: (state, action) => {
+      state.nodes.push(action.payload);
     },
-    updateDepartment: (state, action) => {
-      const index = state.departments.findIndex(dept => dept.id === action.payload.id);
+    updateNode: (state, action) => {
+      const index = state.nodes.findIndex(node => node.id === action.payload.id);
       if (index !== -1) {
-        state.departments[index] = action.payload;
+        state.nodes[index] = action.payload;
       }
     },
-    deleteDepartment: (state, action) => {
-      state.departments = state.departments.filter(dept => dept.id !== action.payload);
+    deleteNode: (state, action) => {
+      state.nodes = state.nodes.filter(node => node.id !== action.payload);
+      state.edges = state.edges.filter(edge => 
+        edge.from !== action.payload && edge.to !== action.payload
+      );
     },
-    setSelectedDepartment: (state, action) => {
-      state.selectedDepartment = action.payload;
+    addEdge: (state, action) => {
+      state.edges.push(action.payload);
+    },
+    deleteEdge: (state, action) => {
+      state.edges = state.edges.filter(edge => 
+        edge.from !== action.payload.from || edge.to !== action.payload.to
+      );
+    },
+    setSelectedNode: (state, action) => {
+      state.selectedNode = action.payload;
     },
     setLoading: (state, action) => {
       state.loading = action.payload;
@@ -39,13 +52,27 @@ export const orgChartSlice = createSlice({
 });
 
 export const {
-  setDepartments,
-  addDepartment,
-  updateDepartment,
-  deleteDepartment,
-  setSelectedDepartment,
+  setOrgChart,
+  addNode,
+  updateNode,
+  deleteNode,
+  addEdge,
+  deleteEdge,
+  setSelectedNode,
   setLoading,
   setError
 } = orgChartSlice.actions;
+
+// Selectors
+export const selectOrgChartNodes = state => state.orgChart.nodes;
+export const selectOrgChartEdges = state => state.orgChart.edges;
+export const selectNodeById = (state, nodeId) => 
+  state.orgChart.nodes.find(node => node.id === nodeId);
+export const selectChildNodes = (state, parentId) => 
+  state.orgChart.nodes.filter(node => node.parentId === parentId);
+export const selectNodesByFactory = (state, factoryId) =>
+  state.orgChart.nodes.filter(node => node.factoryId === factoryId);
+export const selectOrgChartLoading = state => state.orgChart.loading;
+export const selectOrgChartError = state => state.orgChart.error;
 
 export default orgChartSlice.reducer; 
