@@ -1,0 +1,130 @@
+/* src/styles/shared/drag-drop-styles.css */
+
+/* Base draggable styles */
+[draggable="true"],
+.draggable-item {
+  cursor: grab;
+  user-select: none;
+}
+
+[draggable="true"]:active,
+.draggable-item:active {
+  cursor: grabbing;
+}
+
+/* Drag image styles */
+.role-drag-image {
+  padding: 8px 12px;
+  background-color: #bbdefb;
+  border: 1px solid #1976d2;
+  border-radius: 4px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  color: #1976d2;
+  pointer-events: none;
+  position: fixed;
+  z-index: 9999;
+  opacity: 0.9;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.personnel-drag-image {
+  padding: 8px 12px;
+  background-color: #c8e6c9;
+  border: 1px solid #2e7d32;
+  border-radius: 4px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  color: #2e7d32;
+  pointer-events: none;
+  position: fixed;
+  z-index: 9999;
+  opacity: 0.9;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Drop target styles */
+.drop-target,
+.droppable-area {
+  position: relative;
+  transition: background-color 0.2s ease;
+}
+
+.drop-target.drag-over,
+.droppable-area.drag-over {
+  background-color: rgba(25, 118, 210, 0.08);
+}
+
+.drop-target.drag-over::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px dashed #1976d2;
+  border-radius: 4px;
+  animation: pulse 1.5s infinite;
+}
+
+/* Connection line styles */
+.connection-line {
+  fill: none;
+  stroke: #666;
+  stroke-width: 2;
+  stroke-dasharray: none;
+  pointer-events: none;
+}
+
+/* Org chart canvas styles */
+.org-chart-canvas {
+  position: relative;
+  overflow: hidden;
+  background-color: #f9f9f9;
+  transition: transform 0.2s ease;
+}
+
+.org-chart-canvas.dragging {
+  cursor: grabbing;
+}
+
+/* Org node styles */
+.org-node {
+  position: absolute;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.org-node.dragging {
+  z-index: 1000;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Animations */
+@keyframes pulse {
+  0% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.4;
+  }
+}
+
+/* Touch device support */
+@media (hover: none) {
+  [draggable="true"],
+  .draggable-item {
+    cursor: default;
+  }
+
+  [draggable="true"]:active,
+  .draggable-item:active {
+    cursor: default;
+  }
+
+  .drop-target.touch-active {
+    background-color: rgba(25, 118, 210, 0.08);
+  }
+} 
