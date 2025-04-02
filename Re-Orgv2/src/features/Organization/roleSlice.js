@@ -3,10 +3,11 @@ import { createSlice } from '@reduxjs/toolkit';
 const initialState = {
   roles: [],
   loading: false,
-  error: null
+  error: null,
+  selectedRole: null
 };
 
-const roleSlice = createSlice({
+export const roleSlice = createSlice({
   name: 'roles',
   initialState,
   reducers: {
@@ -17,13 +18,16 @@ const roleSlice = createSlice({
       state.roles.push(action.payload);
     },
     updateRole: (state, action) => {
-      const index = state.roles.findIndex(r => r.id === action.payload.id);
+      const index = state.roles.findIndex(role => role.id === action.payload.id);
       if (index !== -1) {
         state.roles[index] = action.payload;
       }
     },
     deleteRole: (state, action) => {
-      state.roles = state.roles.filter(r => r.id !== action.payload);
+      state.roles = state.roles.filter(role => role.id !== action.payload);
+    },
+    setSelectedRole: (state, action) => {
+      state.selectedRole = action.payload;
     },
     setLoading: (state, action) => {
       state.loading = action.payload;
@@ -51,6 +55,7 @@ export const {
   addRole,
   updateRole,
   deleteRole,
+  setSelectedRole,
   setLoading,
   setError,
   updateRoleHierarchy

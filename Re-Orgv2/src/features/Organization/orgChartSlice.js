@@ -1,84 +1,51 @@
-import { createSlice, nanoid } from '@reduxjs/toolkit';
-
-const createEmptyOrgChart = () => ({
-  nodes: [],
-  connections: []
-});
+import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-  orgCharts: {
-    current: {
-      ADD: createEmptyOrgChart(),
-      BBV: createEmptyOrgChart(),
-      SYN: createEmptyOrgChart()
-    },
-    future: {
-      ADD: createEmptyOrgChart(),
-      BBV: createEmptyOrgChart(),
-      SYN: createEmptyOrgChart()
-    }
-  }
+  departments: [],
+  loading: false,
+  error: null,
+  selectedDepartment: null
 };
 
 export const orgChartSlice = createSlice({
   name: 'orgChart',
   initialState,
   reducers: {
-    addNode: (state, action) => {
-      const { phase, factory, node } = action.payload;
-      node.id = nanoid();
-      state.orgCharts[phase][factory].nodes.push(node);
+    setDepartments: (state, action) => {
+      state.departments = action.payload;
     },
-    updateNode: (state, action) => {
-      const { phase, factory, node } = action.payload;
-      const index = state.orgCharts[phase][factory].nodes.findIndex(n => n.id === node.id);
+    addDepartment: (state, action) => {
+      state.departments.push(action.payload);
+    },
+    updateDepartment: (state, action) => {
+      const index = state.departments.findIndex(dept => dept.id === action.payload.id);
       if (index !== -1) {
-        state.orgCharts[phase][factory].nodes[index] = node;
+        state.departments[index] = action.payload;
       }
     },
-    deleteNode: (state, action) => {
-      const { phase, factory, nodeId } = action.payload;
-      state.orgCharts[phase][factory].nodes = state.orgCharts[phase][factory].nodes.filter(node => node.id !== nodeId);
-      // Also remove any connections that include this node
-      state.orgCharts[phase][factory].connections = state.orgCharts[phase][factory].connections.filter(
-        conn => conn.sourceId !== nodeId && conn.targetId !== nodeId
-      );
+    deleteDepartment: (state, action) => {
+      state.departments = state.departments.filter(dept => dept.id !== action.payload);
     },
-    addConnection: (state, action) => {
-      const { phase, factory, connection } = action.payload;
-      connection.id = nanoid();
-      state.orgCharts[phase][factory].connections.push(connection);
+    setSelectedDepartment: (state, action) => {
+      state.selectedDepartment = action.payload;
     },
-    updateConnection: (state, action) => {
-      const { phase, factory, connection } = action.payload;
-      const index = state.orgCharts[phase][factory].connections.findIndex(c => c.id === connection.id);
-      if (index !== -1) {
-        state.orgCharts[phase][factory].connections[index] = connection;
-      }
+    setLoading: (state, action) => {
+      state.loading = action.payload;
     },
-    deleteConnection: (state, action) => {
-      const { phase, factory, connectionId } = action.payload;
-      state.orgCharts[phase][factory].connections = state.orgCharts[phase][factory].connections.filter(
-        conn => conn.id !== connectionId
-      );
-    },
-    copyOrgChart: (state, action) => {
-      const { sourcePhase, targetPhase, factory } = action.payload;
-      state.orgCharts[targetPhase][factory] = JSON.parse(JSON.stringify(state.orgCharts[sourcePhase][factory]));
+    setError: (state, action) => {
+      state.error = action.payload;
     }
   }
 });
 
 export const {
-  addNode,
-  updateNode,
-  deleteNode,
-  addConnection,
-  updateConnection,
-  deleteConnection,
-  copyOrgChart
+  setDepartments,
+  addDepartment,
+  updateDepartment,
+  deleteDepartment,
+  setSelectedDepartment,
+  setLoading,
+  setError
 } = orgChartSlice.actions;
-
-export const selectOrgChart = (state, phase, factory) => state.orgChart.orgCharts[phase][factory];
 
 export default orgChartSlice.reducer; 
