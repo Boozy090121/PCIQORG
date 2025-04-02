@@ -1,92 +1,33 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-  implementations: {},
+  tasks: [],
   loading: false,
-  error: null
+  error: null,
+  selectedTask: null
 };
 
-const implementationTrackingSlice = createSlice({
+export const implementationTrackingSlice = createSlice({
   name: 'implementationTracking',
   initialState,
   reducers: {
-    setImplementations: (state, action) => {
-      const { factory, implementations } = action.payload;
-      state.implementations[factory] = implementations;
+    setTasks: (state, action) => {
+      state.tasks = action.payload;
     },
-    addImplementation: (state, action) => {
-      const { factory, implementation } = action.payload;
-      if (!state.implementations[factory]) {
-        state.implementations[factory] = [];
-      }
-      state.implementations[factory].push(implementation);
+    addTask: (state, action) => {
+      state.tasks.push(action.payload);
     },
-    updateImplementation: (state, action) => {
-      const { factory, implementationId, updates } = action.payload;
-      const implementation = state.implementations[factory]?.find(
-        imp => imp.id === implementationId
-      );
-      if (implementation) {
-        Object.assign(implementation, updates);
+    updateTask: (state, action) => {
+      const index = state.tasks.findIndex(task => task.id === action.payload.id);
+      if (index !== -1) {
+        state.tasks[index] = action.payload;
       }
     },
-    updateImplementationProgress: (state, action) => {
-      const { factory, implementationId, progress } = action.payload;
-      const implementation = state.implementations[factory]?.find(
-        imp => imp.id === implementationId
-      );
-      if (implementation) {
-        implementation.progress = progress;
-        // Update status based on progress
-        if (progress === 100) {
-          implementation.status = 'Completed';
-        } else if (progress > 0) {
-          implementation.status = 'In Progress';
-        }
-      }
+    deleteTask: (state, action) => {
+      state.tasks = state.tasks.filter(task => task.id !== action.payload);
     },
-    deleteImplementation: (state, action) => {
-      const { factory, implementationId } = action.payload;
-      if (state.implementations[factory]) {
-        state.implementations[factory] = state.implementations[factory].filter(
-          imp => imp.id !== implementationId
-        );
-      }
-    },
-    addMilestone: (state, action) => {
-      const { factory, implementationId, milestone } = action.payload;
-      const implementation = state.implementations[factory]?.find(
-        imp => imp.id === implementationId
-      );
-      if (implementation) {
-        if (!implementation.milestones) {
-          implementation.milestones = [];
-        }
-        implementation.milestones.push(milestone);
-      }
-    },
-    updateMilestone: (state, action) => {
-      const { factory, implementationId, milestoneId, updates } = action.payload;
-      const implementation = state.implementations[factory]?.find(
-        imp => imp.id === implementationId
-      );
-      if (implementation) {
-        const milestone = implementation.milestones?.find(m => m.id === milestoneId);
-        if (milestone) {
-          Object.assign(milestone, updates);
-        }
-      }
-    },
-    deleteMilestone: (state, action) => {
-      const { factory, implementationId, milestoneId } = action.payload;
-      const implementation = state.implementations[factory]?.find(
-        imp => imp.id === implementationId
-      );
-      if (implementation && implementation.milestones) {
-        implementation.milestones = implementation.milestones.filter(
-          m => m.id !== milestoneId
-        );
-      }
+    setSelectedTask: (state, action) => {
+      state.selectedTask = action.payload;
     },
     setLoading: (state, action) => {
       state.loading = action.payload;
@@ -97,38 +38,14 @@ const implementationTrackingSlice = createSlice({
   }
 });
 
-// Export actions
 export const {
-  setImplementations,
-  addImplementation,
-  updateImplementation,
-  updateImplementationProgress,
-  deleteImplementation,
-  addMilestone,
-  updateMilestone,
-  deleteMilestone,
+  setTasks,
+  addTask,
+  updateTask,
+  deleteTask,
+  setSelectedTask,
   setLoading,
   setError
 } = implementationTrackingSlice.actions;
-
-// Selectors
-export const selectImplementationsByFactory = (state, factory) =>
-  state.implementationTracking.implementations[factory] || [];
-
-export const selectImplementationById = (state, factory, implementationId) =>
-  state.implementationTracking.implementations[factory]?.find(
-    imp => imp.id === implementationId
-  );
-
-export const selectImplementationProgress = (state, factory) => {
-  const implementations = state.implementationTracking.implementations[factory] || [];
-  if (implementations.length === 0) return 0;
-  
-  const totalProgress = implementations.reduce(
-    (sum, imp) => sum + (imp.progress || 0),
-    0
-  );
-  return Math.round(totalProgress / implementations.length);
-};
 
 export default implementationTrackingSlice.reducer; 

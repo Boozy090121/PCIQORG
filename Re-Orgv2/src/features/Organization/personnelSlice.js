@@ -3,7 +3,8 @@ import { createSlice } from '@reduxjs/toolkit';
 const initialState = {
   personnel: [],
   loading: false,
-  error: null
+  error: null,
+  selectedPerson: null
 };
 
 const personnelSlice = createSlice({
@@ -13,17 +14,20 @@ const personnelSlice = createSlice({
     setPersonnel: (state, action) => {
       state.personnel = action.payload;
     },
-    addPersonnel: (state, action) => {
+    addPerson: (state, action) => {
       state.personnel.push(action.payload);
     },
-    updatePersonnel: (state, action) => {
-      const index = state.personnel.findIndex(p => p.id === action.payload.id);
+    updatePerson: (state, action) => {
+      const index = state.personnel.findIndex(person => person.id === action.payload.id);
       if (index !== -1) {
         state.personnel[index] = action.payload;
       }
     },
-    deletePersonnel: (state, action) => {
-      state.personnel = state.personnel.filter(p => p.id !== action.payload);
+    deletePerson: (state, action) => {
+      state.personnel = state.personnel.filter(person => person.id !== action.payload);
+    },
+    setSelectedPerson: (state, action) => {
+      state.selectedPerson = action.payload;
     },
     setLoading: (state, action) => {
       state.loading = action.payload;
@@ -92,9 +96,10 @@ const personnelSlice = createSlice({
 
 export const {
   setPersonnel,
-  addPersonnel,
-  updatePersonnel,
-  deletePersonnel,
+  addPerson,
+  updatePerson,
+  deletePerson,
+  setSelectedPerson,
   setLoading,
   setError,
   addPerformanceReview,

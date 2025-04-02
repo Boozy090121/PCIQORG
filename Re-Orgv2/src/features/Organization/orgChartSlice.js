@@ -1,84 +1,78 @@
-import { createSlice, nanoid } from '@reduxjs/toolkit';
-
-const createEmptyOrgChart = () => ({
-  nodes: [],
-  connections: []
-});
+import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-  orgCharts: {
-    current: {
-      ADD: createEmptyOrgChart(),
-      BBV: createEmptyOrgChart(),
-      SYN: createEmptyOrgChart()
-    },
-    future: {
-      ADD: createEmptyOrgChart(),
-      BBV: createEmptyOrgChart(),
-      SYN: createEmptyOrgChart()
-    }
-  }
+  nodes: [],
+  edges: [],
+  loading: false,
+  error: null,
+  selectedNode: null
 };
 
 export const orgChartSlice = createSlice({
   name: 'orgChart',
   initialState,
   reducers: {
+    setOrgChart: (state, action) => {
+      state.nodes = action.payload.nodes;
+      state.edges = action.payload.edges;
+    },
     addNode: (state, action) => {
-      const { phase, factory, node } = action.payload;
-      node.id = nanoid();
-      state.orgCharts[phase][factory].nodes.push(node);
+      state.nodes.push(action.payload);
     },
     updateNode: (state, action) => {
-      const { phase, factory, node } = action.payload;
-      const index = state.orgCharts[phase][factory].nodes.findIndex(n => n.id === node.id);
+      const index = state.nodes.findIndex(node => node.id === action.payload.id);
       if (index !== -1) {
-        state.orgCharts[phase][factory].nodes[index] = node;
+        state.nodes[index] = action.payload;
       }
     },
     deleteNode: (state, action) => {
-      const { phase, factory, nodeId } = action.payload;
-      state.orgCharts[phase][factory].nodes = state.orgCharts[phase][factory].nodes.filter(node => node.id !== nodeId);
-      // Also remove any connections that include this node
-      state.orgCharts[phase][factory].connections = state.orgCharts[phase][factory].connections.filter(
-        conn => conn.sourceId !== nodeId && conn.targetId !== nodeId
+      state.nodes = state.nodes.filter(node => node.id !== action.payload);
+      state.edges = state.edges.filter(edge => 
+        edge.from !== action.payload && edge.to !== action.payload
       );
     },
-    addConnection: (state, action) => {
-      const { phase, factory, connection } = action.payload;
-      connection.id = nanoid();
-      state.orgCharts[phase][factory].connections.push(connection);
+    addEdge: (state, action) => {
+      state.edges.push(action.payload);
     },
-    updateConnection: (state, action) => {
-      const { phase, factory, connection } = action.payload;
-      const index = state.orgCharts[phase][factory].connections.findIndex(c => c.id === connection.id);
-      if (index !== -1) {
-        state.orgCharts[phase][factory].connections[index] = connection;
-      }
-    },
-    deleteConnection: (state, action) => {
-      const { phase, factory, connectionId } = action.payload;
-      state.orgCharts[phase][factory].connections = state.orgCharts[phase][factory].connections.filter(
-        conn => conn.id !== connectionId
+    deleteEdge: (state, action) => {
+      state.edges = state.edges.filter(edge => 
+        edge.from !== action.payload.from || edge.to !== action.payload.to
       );
     },
-    copyOrgChart: (state, action) => {
-      const { sourcePhase, targetPhase, factory } = action.payload;
-      state.orgCharts[targetPhase][factory] = JSON.parse(JSON.stringify(state.orgCharts[sourcePhase][factory]));
+    setSelectedNode: (state, action) => {
+      state.selectedNode = action.payload;
+    },
+    setLoading: (state, action) => {
+      state.loading = action.payload;
+    },
+    setError: (state, action) => {
+      state.error = action.payload;
     }
   }
 });
 
 export const {
+  setOrgChart,
   addNode,
   updateNode,
   deleteNode,
-  addConnection,
-  updateConnection,
-  deleteConnection,
-  copyOrgChart
+  addEdge,
+  deleteEdge,
+  setSelectedNode,
+  setLoading,
+  setError
 } = orgChartSlice.actions;
 
-export const selectOrgChart = (state, phase, factory) => state.orgChart.orgCharts[phase][factory];
+// Selectors
+export const selectOrgChartNodes = state => state.orgChart.nodes;
+export const selectOrgChartEdges = state => state.orgChart.edges;
+export const selectNodeById = (state, nodeId) => 
+  state.orgChart.nodes.find(node => node.id === nodeId);
+export const selectChildNodes = (state, parentId) => 
+  state.orgChart.nodes.filter(node => node.parentId === parentId);
+export const selectNodesByFactory = (state, factoryId) =>
+  state.orgChart.nodes.filter(node => node.factoryId === factoryId);
+export const selectOrgChartLoading = state => state.orgChart.loading;
+export const selectOrgChartError = state => state.orgChart.error;
 
 export default orgChartSlice.reducer; 
