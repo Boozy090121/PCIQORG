@@ -1,155 +1,244 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   AppBar,
   Toolbar,
   Typography,
   IconButton,
+  Button,
+  Box,
   Menu,
   MenuItem,
-  Box,
-  Button,
   Divider,
-  ListItemIcon,
-  ListItemText,
-  useTheme,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import {
   Menu as MenuIcon,
   AccountCircle,
-  Settings as SettingsIcon,
   Save as SaveIcon,
-  FolderOpen as OpenIcon,
-  Add as NewIcon,
-  Help as HelpIcon,
-  ExitToApp as LogoutIcon,
-  Brightness4 as DarkModeIcon,
-  Brightness7 as LightModeIcon,
+  CloudUpload as CloudUploadIcon,
+  CloudDownload as CloudDownloadIcon
 } from '@mui/icons-material';
+import { useSelector, useDispatch } from 'react-redux';
+import { logout } from '../../../features/Auth/authSlice';
+import firebaseService from '../../../services/firebase';
 
-const AppHeader = ({
-  onToggleTheme,
-  isDarkMode,
-  onNewProject,
-  onOpenProject,
-  onSaveProject,
-  onShowSettings,
-  onShowHelp,
-  onLogout,
-  projectName = '',
-}) => {
-  const theme = useTheme();
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [userMenuAnchor, setUserMenuAnchor] = useState(null);
+const AppHeader = () => {
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [userMenuAnchor, setUserMenuAnchor] = React.useState(null);
+  const [snackbar, setSnackbar] = React.useState({ open: false, message: '', severity: 'success' });
+  const dispatch = useDispatch();
+  const { currentUser } = useSelector((state) => state.auth) || {};
 
-  const handleMenuOpen = (event) => {
+  const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
   };
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
+  const handleUserMenu = (event) => {
+    setUserMenuAnchor(event.currentTarget);
   };
 
-  const handleUserMenuOpen = (event) => {
-    setUserMenuAnchor(event.currentTarget);
+  const handleClose = () => {
+    setAnchorEl(null);
   };
 
   const handleUserMenuClose = () => {
     setUserMenuAnchor(null);
   };
 
-  const handleAction = (action) => {
-    handleMenuClose();
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  const handleSave = async () => {
+    try {
+      await firebaseService.saveAppState();
+      showSnackbar('Project saved successfully');
+    } catch (error) {
+      showSnackbar('Failed to save project', 'error');
+      console.error('Save failed:', error);
+    }
+    handleClose();
+  };
+
+  const handleImport = async () => {
+    try {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = async (event) => {
+            try {
+              const state = JSON.parse(event.target.result);
+              await firebaseService.importAppState(state);
+              showSnackbar('Project imported successfully');
+            } catch (error) {
+              showSnackbar('Failed to import project', 'error');
+              console.error('Import failed:', error);
+            }
+          };
+          reader.readAsText(file);
+        }
+      };
+      input.click();
+    } catch (error) {
+      showSnackbar('Failed to import project', 'error');
+      console.error('Import failed:', error);
+    }
+    handleClose();
+  };
+
+  const handleExport = async () => {
+    try {
+      const state = await firebaseService.exportAppState();
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `re-org-project-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showSnackbar('Project exported successfully');
+    } catch (error) {
+      showSnackbar('Failed to export project', 'error');
+      console.error('Export failed:', error);
+    }
+    handleClose();
+  };
+
+  const handleLogout = async () => {
+    try {
+      await firebaseService.logout();
+      dispatch(logout());
+      showSnackbar('Logged out successfully');
+    } catch (error) {
+      showSnackbar('Logout failed', 'error');
+      console.error('Logout failed:', error);
+    }
     handleUserMenuClose();
-    action();
   };
 
   return (
-    <AppBar position="static" color="default" elevation={1}>
-      <Toolbar>
-        <IconButton
-          edge="start"
-          color="inherit"
-          aria-label="menu"
-          onClick={handleMenuOpen}
-          size="large"
-        >
-          <MenuIcon />
-        </IconButton>
-
-        <Menu
-          anchorEl={anchorEl}
-          keepMounted
-          open={Boolean(anchorEl)}
-          onClose={handleMenuClose}
-        >
-          <MenuItem onClick={() => handleAction(onNewProject)}>
-            <ListItemIcon>
-              <NewIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>New Project</ListItemText>
-          </MenuItem>
-          <MenuItem onClick={() => handleAction(onOpenProject)}>
-            <ListItemIcon>
-              <OpenIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Open Project</ListItemText>
-          </MenuItem>
-          <MenuItem onClick={() => handleAction(onSaveProject)}>
-            <ListItemIcon>
-              <SaveIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Save Project</ListItemText>
-          </MenuItem>
-        </Menu>
-
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1, ml: 2 }}>
-          {projectName || 'Organization Manager'}
-        </Typography>
-
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            color="inherit"
-            startIcon={<HelpIcon />}
-            onClick={onShowHelp}
-          >
-            Help
-          </Button>
-
-          <IconButton color="inherit" onClick={onToggleTheme}>
-            {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
-          </IconButton>
-
+    <>
+      <AppBar position="static">
+        <Toolbar>
           <IconButton
-            color="inherit"
-            onClick={handleUserMenuOpen}
             size="large"
+            edge="start"
+            color="inherit"
+            aria-label="menu"
+            sx={{ mr: 2 }}
+            onClick={handleMenu}
           >
-            <AccountCircle />
+            <MenuIcon />
           </IconButton>
-        </Box>
 
-        <Menu
-          anchorEl={userMenuAnchor}
-          keepMounted
-          open={Boolean(userMenuAnchor)}
-          onClose={handleUserMenuClose}
-        >
-          <MenuItem onClick={() => handleAction(onShowSettings)}>
-            <ListItemIcon>
-              <SettingsIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Settings</ListItemText>
-          </MenuItem>
-          <Divider />
-          <MenuItem onClick={() => handleAction(onLogout)}>
-            <ListItemIcon>
-              <LogoutIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Logout</ListItemText>
-          </MenuItem>
-        </Menu>
-      </Toolbar>
-    </AppBar>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            Re-Org Manager
+          </Typography>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Button
+              color="inherit"
+              startIcon={<SaveIcon />}
+              onClick={handleSave}
+            >
+              Save
+            </Button>
+
+            <Button
+              color="inherit"
+              startIcon={<CloudUploadIcon />}
+              onClick={handleImport}
+            >
+              Import
+            </Button>
+
+            <Button
+              color="inherit"
+              startIcon={<CloudDownloadIcon />}
+              onClick={handleExport}
+            >
+              Export
+            </Button>
+
+            <IconButton
+              size="large"
+              aria-label="account of current user"
+              aria-controls="menu-appbar"
+              aria-haspopup="true"
+              onClick={handleUserMenu}
+              color="inherit"
+            >
+              <AccountCircle />
+            </IconButton>
+          </Box>
+
+          <Menu
+            id="menu-appbar"
+            anchorEl={anchorEl}
+            anchorOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
+            keepMounted
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+          >
+            <MenuItem onClick={handleSave}>Save Project</MenuItem>
+            <MenuItem onClick={handleImport}>Import</MenuItem>
+            <MenuItem onClick={handleExport}>Export</MenuItem>
+            <Divider />
+            <MenuItem onClick={handleClose}>Settings</MenuItem>
+          </Menu>
+
+          <Menu
+            id="user-menu-appbar"
+            anchorEl={userMenuAnchor}
+            anchorOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
+            keepMounted
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
+            open={Boolean(userMenuAnchor)}
+            onClose={handleUserMenuClose}
+          >
+            <MenuItem onClick={handleUserMenuClose}>Profile</MenuItem>
+            <MenuItem onClick={handleUserMenuClose}>My Account</MenuItem>
+            <Divider />
+            <MenuItem onClick={handleLogout}>Logout</MenuItem>
+          </Menu>
+        </Toolbar>
+      </AppBar>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 

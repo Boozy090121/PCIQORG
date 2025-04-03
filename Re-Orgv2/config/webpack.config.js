@@ -5,23 +5,19 @@ const webpack = require('webpack');
 module.exports = {
   entry: './src/index.js',
   output: {
-    path: path.resolve(__dirname, '../build'),
+    path: path.resolve(__dirname, '../dist'),
     filename: 'bundle.js',
-    clean: true
+    publicPath: '/'
   },
   module: {
     rules: [
       {
-        test: /\.(js|jsx|ts|tsx)$/,
+        test: /\.(js|jsx)$/,
         exclude: /node_modules/,
         use: {
           loader: 'babel-loader',
           options: {
-            presets: [
-              '@babel/preset-env',
-              ['@babel/preset-react', { runtime: 'automatic' }],
-              '@babel/preset-typescript'
-            ]
+            presets: ['@babel/preset-env', '@babel/preset-react']
           }
         }
       },
@@ -35,42 +31,37 @@ module.exports = {
       }
     ]
   },
+  resolve: {
+    extensions: ['.js', '.jsx', '.ts', '.tsx'],
+    alias: {
+      '@components': path.resolve(__dirname, '../src/components'),
+      '@features': path.resolve(__dirname, '../src/features'),
+      '@services': path.resolve(__dirname, '../src/services'),
+      '@store': path.resolve(__dirname, '../src/store'),
+      '@styles': path.resolve(__dirname, '../src/styles'),
+      '@core': path.resolve(__dirname, '../src/components/Core'),
+      '@utils': path.resolve(__dirname, '../src/utils'),
+      '@config': path.resolve(__dirname, '../src/config')
+    }
+  },
   plugins: [
     new HtmlWebpackPlugin({
       template: './public/index.html'
     }),
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-      'process.env.REACT_APP_FIREBASE_API_KEY': JSON.stringify(process.env.REACT_APP_FIREBASE_API_KEY || 'YOUR_API_KEY'),
-      'process.env.REACT_APP_FIREBASE_AUTH_DOMAIN': JSON.stringify(process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || 'YOUR_AUTH_DOMAIN'),
-      'process.env.REACT_APP_FIREBASE_PROJECT_ID': JSON.stringify(process.env.REACT_APP_FIREBASE_PROJECT_ID || 'YOUR_PROJECT_ID'),
-      'process.env.REACT_APP_FIREBASE_STORAGE_BUCKET': JSON.stringify(process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || 'YOUR_STORAGE_BUCKET'),
-      'process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID': JSON.stringify(process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || 'YOUR_SENDER_ID'),
-      'process.env.REACT_APP_FIREBASE_APP_ID': JSON.stringify(process.env.REACT_APP_FIREBASE_APP_ID || 'YOUR_APP_ID')
+      'process.env.FIREBASE_API_KEY': JSON.stringify(process.env.FIREBASE_API_KEY),
+      'process.env.FIREBASE_AUTH_DOMAIN': JSON.stringify(process.env.FIREBASE_AUTH_DOMAIN),
+      'process.env.FIREBASE_PROJECT_ID': JSON.stringify(process.env.FIREBASE_PROJECT_ID),
+      'process.env.FIREBASE_STORAGE_BUCKET': JSON.stringify(process.env.FIREBASE_STORAGE_BUCKET),
+      'process.env.FIREBASE_MESSAGING_SENDER_ID': JSON.stringify(process.env.FIREBASE_MESSAGING_SENDER_ID),
+      'process.env.FIREBASE_APP_ID': JSON.stringify(process.env.FIREBASE_APP_ID)
     })
   ],
-  resolve: {
-    extensions: ['.js', '.jsx', '.ts', '.tsx'],
-    alias: {
-      '@': path.resolve(__dirname, '../src'),
-      '@components': path.resolve(__dirname, '../src/components'),
-      '@core': path.resolve(__dirname, '../src/components/Core'),
-      '@ui': path.resolve(__dirname, '../src/components/UI'),
-      '@features': path.resolve(__dirname, '../src/features'),
-      '@services': path.resolve(__dirname, '../src/services'),
-      '@models': path.resolve(__dirname, '../src/models'),
-      '@styles': path.resolve(__dirname, '../src/styles'),
-      '@config': path.resolve(__dirname, '../src/config'),
-      '@store': path.resolve(__dirname, '../src/store')
-    }
-  },
   devServer: {
-    static: {
-      directory: path.join(__dirname, '../public')
-    },
-    port: 3000,
+    historyApiFallback: true,
     hot: true,
-    historyApiFallback: true
+    port: 3000
   },
-  devtool: process.env.NODE_ENV === 'development' ? 'eval-source-map' : false
+  devtool: 'source-map'
 }; 

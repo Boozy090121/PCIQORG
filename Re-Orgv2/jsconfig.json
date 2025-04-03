@@ -4,26 +4,18 @@
     "paths": {
       "@/*": ["src/*"],
       "@components/*": ["src/components/*"],
-      "@core/*": ["src/components/Core/*"],
-      "@ui/*": ["src/components/UI/*"],
       "@features/*": ["src/features/*"],
       "@services/*": ["src/services/*"],
-      "@models/*": ["src/models/*"],
-      "@styles/*": ["src/styles/*"],
-      "@utils/*": ["src/utils/*"],
-      "@hooks/*": ["src/hooks/*"],
-      "@config/*": ["config/*"]
+      "@store/*": ["src/store/*"]
     },
-    "jsx": "react-jsx",
-    "target": "es2020",
-    "module": "esnext",
-    "moduleResolution": "node",
+    "jsx": "react",
+    "target": "es6",
+    "module": "commonjs",
+    "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "isolatedModules": true,
-    "strict": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true
+    "forceConsistentCasingInFileNames": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "build"]
+  "exclude": ["node_modules", "dist"]
 } 
