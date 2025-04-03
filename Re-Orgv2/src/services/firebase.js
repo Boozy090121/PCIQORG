@@ -4,6 +4,7 @@ import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, si
 
 // Firebase configuration with your provided values
 const firebaseConfig = {
+<<<<<<< HEAD
   apiKey: "AIzaSyB8v5Jwcc-73i3-CuZ70BH1EW_LsWuVs0Q",
   authDomain: "reorg-cfa43.firebaseapp.com",
   projectId: "reorg-cfa43",
@@ -11,6 +12,14 @@ const firebaseConfig = {
   messagingSenderId: "754287455974",
   appId: "1:754287455974:web:fd00416f1ede3044db5527",
   measurementId: "G-J9WN5L29Q7"
+=======
+  apiKey: process.env.FIREBASE_API_KEY,
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.FIREBASE_APP_ID
+>>>>>>> ff2e79f1e6f7febe7a838a67b6ad7f42717fea94
 };
 
 // Initialize Firebase immediately
@@ -18,6 +27,7 @@ let app;
 let db;
 let auth;
 
+<<<<<<< HEAD
 try {
   app = initializeApp(firebaseConfig);
   db = getFirestore(app);
@@ -26,6 +36,22 @@ try {
 } catch (error) {
   console.error('Error initializing Firebase core services:', error);
 }
+=======
+export const initializeFirebase = () => {
+  try {
+    app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    auth = getAuth(app);
+    console.log('Firebase initialized successfully');
+  } catch (error) {
+    console.error('Error initializing Firebase:', error);
+  }
+};
+
+export const getFirebaseApp = () => app;
+export const getFirebaseDb = () => db;
+export const getFirebaseAuth = () => auth;
+>>>>>>> ff2e79f1e6f7febe7a838a67b6ad7f42717fea94
 
 // Firebase service class
 class FirebaseService {

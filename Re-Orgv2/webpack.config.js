@@ -1,5 +1,9 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+<<<<<<< HEAD
+=======
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+>>>>>>> ff2e79f1e6f7febe7a838a67b6ad7f42717fea94
 
 module.exports = {
   entry: './src/index.js',
@@ -42,6 +46,7 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
+<<<<<<< HEAD
       template: './public/index.html'
     })
   ],
@@ -49,5 +54,31 @@ module.exports = {
     historyApiFallback: true,
     hot: true,
     port: 3000
+=======
+      template: './public/index.html',
+      filename: 'index.html'
+    }),
+    new CopyWebpackPlugin({
+      patterns: [
+        { 
+          from: './src/styles/global.css', 
+          to: 'styles.css' 
+        },
+        {
+          from: './public',
+          to: '',
+          globOptions: {
+            ignore: ['**/index.html']
+          }
+        }
+      ]
+    })
+  ],
+  devServer: {
+    hot: true,
+    host: '0.0.0.0',
+    port: 3000,
+    historyApiFallback: true
+>>>>>>> ff2e79f1e6f7febe7a838a67b6ad7f42717fea94
   }
 }; 
