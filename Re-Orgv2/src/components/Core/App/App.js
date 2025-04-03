@@ -1,68 +1,167 @@
 import React, { useState } from 'react';
-import { Box, Tabs, Tab, Paper } from '@mui/material';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { Box, Container, Typography, Button, Paper, TextField } from '@mui/material';
+import { Provider as ReduxProvider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
+import orgChartReducer from '../../../../features/OrgChart/orgChartSlice';
+import OrgChartView from '../../OrgChart/OrgChartView';
 
-// Core Components
-import AppHeader from '@core/Layout/AppHeader';
-import FlexibleLayout from '@core/Layout/FlexibleLayout';
-import PersistenceManager from '@core/Persistence/PersistenceManager';
-import DashboardAnalytics from '@core/Dashboard/DashboardAnalytics';
-import PhaseManager from '@core/PhaseManager/PhaseManager';
-import StateComparisonTool from '@core/PhaseManager/StateComparisonTool';
-import ReportsAndAnalytics from '@core/Analytics/ReportsAndAnalytics';
+// Create Redux store
+const store = configureStore({
+  reducer: {
+    orgChart: orgChartReducer,
+  },
+});
 
-// Feature Components
-import FocusFactorySelector from '@features/Organization/components/FocusFactorySelector';
-import ImplementationTracking from '@features/Implementation/components/ImplementationTracking';
-import TransitionPlan from '@features/Implementation/components/TransitionPlan';
-import TrainingAnalysis from '@features/Training/components/TrainingAnalysis';
+// Create theme
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#1976d2',
+    },
+    secondary: {
+      main: '#9c27b0',
+    },
+    background: {
+      default: '#f5f5f5',
+    },
+  },
+});
 
-// Panel Components
-import LeftPanel from '@components/Panel/LeftPanel/LeftPanel';
-import CenterPanel from '@components/Panel/CenterPanel/CenterPanel';
-import RightPanel from '@components/Panel/RightPanel/RightPanel';
-
-function App() {
-  const [currentTab, setCurrentTab] = useState(0);
-
-  const handleTabChange = (event, newValue) => {
-    setCurrentTab(newValue);
+// Minimal Login component
+function SimpleLogin({ onLogin }) {
+  const [username, setUsername] = useState('');
+  
+  const handleLogin = () => {
+    if (username.trim()) {
+      onLogin({ username });
+    }
   };
-
+  
+  const handleDemoLogin = () => {
+    onLogin({ username: 'Demo User' });
+  };
+  
   return (
-    <Box className="app-container">
-      <AppHeader />
+    <Paper elevation={3} sx={{ p: 4, width: '100%', maxWidth: 400 }}>
+      <Typography variant="h5" gutterBottom>Sign In</Typography>
       
-      <Box sx={{ display: 'flex', padding: 2, gap: 2 }}>
-        <FocusFactorySelector />
-        <PhaseManager />
-        <Box sx={{ ml: 'auto' }}>
-          <PersistenceManager />
-        </Box>
+      <TextField
+        label="Username"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+        fullWidth
+        margin="normal"
+      />
+      
+      <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          onClick={handleLogin}
+          disabled={!username.trim()}
+        >
+          Sign In
+        </Button>
+        
+        <Button 
+          variant="outlined" 
+          onClick={handleDemoLogin}
+        >
+          Demo Login
+        </Button>
       </Box>
-      
-      <Paper sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-        <Tabs value={currentTab} onChange={handleTabChange} centered>
-          <Tab label="Organization Chart" />
-          <Tab label="Phase Comparison" />
-          <Tab label="Reports & Analytics" />
-          <Tab label="Dashboard" />
-        </Tabs>
-      </Paper>
+    </Paper>
+  );
+}
 
-      {currentTab === 0 && (
-        <FlexibleLayout>
-          <LeftPanel />
-          <CenterPanel />
-          <RightPanel />
-        </FlexibleLayout>
-      )}
+// Simple header component
+function SimpleHeader({ username, onLogout }) {
+  return (
+    <Box sx={{ 
+      bgcolor: 'primary.main', 
+      color: 'white', 
+      p: 2, 
+      display: 'flex', 
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 1100
+    }}>
+      <Typography variant="h6">
+        Organization Manager
+      </Typography>
       
-      {currentTab === 1 && <StateComparisonTool />}
-      
-      {currentTab === 2 && <ReportsAndAnalytics />}
-      
-      {currentTab === 3 && <DashboardAnalytics />}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Typography variant="body2">
+          {username}
+        </Typography>
+        <Button 
+          variant="outlined" 
+          color="inherit" 
+          size="small" 
+          onClick={onLogout}
+        >
+          Logout
+        </Button>
+      </Box>
     </Box>
+  );
+}
+
+// Main App component
+function App() {
+  const [user, setUser] = useState(null);
+  
+  const handleLogin = (userData) => {
+    setUser(userData);
+  };
+  
+  const handleLogout = () => {
+    setUser(null);
+  };
+  
+  return (
+    <ReduxProvider store={store}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        {user ? (
+          <>
+            <SimpleHeader username={user.username} onLogout={handleLogout} />
+            <Box sx={{ mt: 8, p: 2 }}>
+              <Container maxWidth="xl">
+                <OrgChartView />
+              </Container>
+            </Box>
+          </>
+        ) : (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: '100vh',
+              p: 2,
+            }}
+          >
+            <Typography 
+              variant="h4" 
+              component="h1" 
+              gutterBottom
+              sx={{ mb: 4 }}
+            >
+              Organization Management System
+            </Typography>
+            <SimpleLogin onLogin={handleLogin} />
+          </Box>
+        )}
+      </ThemeProvider>
+    </ReduxProvider>
   );
 }
 

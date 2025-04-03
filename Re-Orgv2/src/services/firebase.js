@@ -1,64 +1,45 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { getFirestore, collection, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
 
-// Firebase configuration
+// Firebase configuration with your provided values
 const firebaseConfig = {
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.REACT_APP_FIREBASE_APP_ID
+  apiKey: "AIzaSyB8v5Jwcc-73i3-CuZ70BH1EW_LsWuVs0Q",
+  authDomain: "reorg-cfa43.firebaseapp.com",
+  projectId: "reorg-cfa43",
+  storageBucket: "reorg-cfa43.firebasestorage.app",
+  messagingSenderId: "754287455974",
+  appId: "1:754287455974:web:fd00416f1ede3044db5527",
+  measurementId: "G-J9WN5L29Q7"
 };
 
+// Initialize Firebase immediately
 let app;
 let db;
 let auth;
 
-export const initializeFirebase = () => {
-  try {
-    app = initializeApp(firebaseConfig);
-    db = getFirestore(app);
-    auth = getAuth(app);
-    console.log('Firebase initialized successfully');
-    return true;
-  } catch (error) {
-    console.error('Error initializing Firebase:', error);
-    return false;
-  }
-};
-
-export const getFirebaseApp = () => app;
-export const getFirebaseDB = () => db;
-export const getFirebaseAuth = () => auth;
+try {
+  app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+  auth = getAuth(app);
+  console.log('Firebase core services initialized successfully');
+} catch (error) {
+  console.error('Error initializing Firebase core services:', error);
+}
 
 // Firebase service class
 class FirebaseService {
   constructor() {
     this.currentUser = null;
-    this.isInitialized = false;
+    this.isInitialized = !!app && !!db && !!auth;
+    console.log('FirebaseService constructed, initialized status:', this.isInitialized);
   }
-
-  // Initialize the Firebase service
-  init = () => {
-    try {
-      console.log('Initializing Firebase service...');
-      this.isInitialized = true;
-      console.log('Firebase service initialized successfully');
-      return true;
-    } catch (error) {
-      console.error("Error initializing Firebase service:", error);
-      console.error("Stack trace:", error.stack);
-      this.isInitialized = false;
-      return false;
-    }
-  };
 
   // Helper function to check initialization
   checkInitialization = () => {
-    if (!this.isInitialized) {
-      throw new Error('Firebase service not properly initialized');
+    if (!app || !db || !auth) {
+      console.error('Firebase core services unavailable');
+      throw new Error('Firebase services unavailable');
     }
   };
 
@@ -67,7 +48,8 @@ class FirebaseService {
     try {
       console.log('Attempting login...');
       this.checkInitialization();
-      const userCredential = await auth.signInWithEmailAndPassword(email, password);
+      
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       console.log('User successfully authenticated');
       
@@ -81,165 +63,42 @@ class FirebaseService {
       
       try {
         // Get user role from Firestore
-        console.log('Fetching user data from Firestore...');
-        const userDoc = await db.collection('users').doc(user.uid).get();
-        if (userDoc.exists) {
-          const userData = userDoc.data();
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+        
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data();
           this.currentUser.name = userData.name || this.currentUser.name;
           this.currentUser.role = userData.role || this.currentUser.role;
-          console.log('User data retrieved from Firestore');
         } else {
-          console.log('Creating new user document in Firestore...');
           // Create user document if it doesn't exist
-          await db.collection('users').doc(user.uid).set({
+          await setDoc(userDocRef, {
             name: this.currentUser.name,
             email: this.currentUser.email,
             role: this.currentUser.role,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            createdAt: serverTimestamp()
           });
-          console.log('New user document created in Firestore');
         }
       } catch (error) {
-        // Handle Firestore errors gracefully
-        if (error.code === 'permission-denied') {
-          console.warn('Permission denied accessing user document. Using default user data.');
-        } else {
-          console.error('Error managing user document:', error);
-        }
+        console.error('Error managing user document:', error);
       }
       
       return { success: true, user: this.currentUser };
     } catch (error) {
       console.error('Login error:', error);
-      console.error('Stack trace:', error.stack);
       return { success: false, message: error.message };
     }
   };
 
-  register = async (userData) => {
-    try {
-      const userCredential = await auth.createUserWithEmailAndPassword(userData.email, userData.password);
-      const user = userCredential.user;
-      
-      // Update user profile
-      await user.updateProfile({
-        displayName: userData.name
-      });
-      
-      // Create user document in Firestore
-      await db.collection('users').doc(user.uid).set({
-        name: userData.name,
-        email: userData.email,
-        role: 'user',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      
-      this.currentUser = {
-        id: user.uid,
-        name: userData.name,
-        email: userData.email,
-        username: userData.email,
-        role: 'user'
-      };
-      
-      return { success: true, user: this.currentUser };
-    } catch (error) {
-      return { success: false, message: error.message };
-    }
-  };
-
-  logout = async () => {
-    try {
-      await auth.signOut();
-      this.currentUser = null;
-      return { success: true };
-    } catch (error) {
-      return { success: false, message: error.message };
-    }
-  };
-
-  getCurrentUser = () => {
-    return this.currentUser;
-  };
-
-  isLoggedIn = () => {
-    return !!this.currentUser;
-  };
-
-  saveAppState = async (state) => {
-    try {
-      if (!this.currentUser) {
-        throw new Error('User not authenticated');
-      }
-      
-      await db.collection('appStates').doc(this.currentUser.id).set({
-        state,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      
-      return { success: true };
-    } catch (error) {
-      return { success: false, message: error.message };
-    }
-  };
-
-  loadAppState = async () => {
-    try {
-      if (!this.currentUser) {
-        throw new Error('User not authenticated');
-      }
-      
-      const doc = await db.collection('appStates').doc(this.currentUser.id).get();
-      if (doc.exists) {
-        return { success: true, state: doc.data().state };
-      }
-      return { success: false, message: 'No saved state found' };
-    } catch (error) {
-      return { success: false, message: error.message };
-    }
-  };
-
-  exportUserData = async () => {
-    try {
-      if (!this.currentUser) {
-        throw new Error('User not authenticated');
-      }
-      
-      const userData = await db.collection('users').doc(this.currentUser.id).get();
-      const appState = await db.collection('appStates').doc(this.currentUser.id).get();
-      
-      const exportData = {
-        user: userData.exists ? userData.data() : null,
-        appState: appState.exists ? appState.data() : null,
-        exportedAt: new Date().toISOString()
-      };
-      
-      return { success: true, data: exportData };
-    } catch (error) {
-      return { success: false, message: error.message };
-    }
-  };
-
-  importUserData = async (jsonData) => {
-    try {
-      if (!this.currentUser) {
-        throw new Error('User not authenticated');
-      }
-      
-      const data = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
-      
-      if (data.user) {
-        await db.collection('users').doc(this.currentUser.id).set(data.user, { merge: true });
-      }
-      
-      if (data.appState) {
-        await db.collection('appStates').doc(this.currentUser.id).set(data.appState);
-      }
-      
-      return { success: true };
-    } catch (error) {
-      return { success: false, message: error.message };
-    }
+  // For development/testing only
+  createDemoUser = () => {
+    this.currentUser = {
+      id: 'demo-user-id',
+      name: 'Demo User',
+      email: 'demo@example.com',
+      role: 'user'
+    };
+    return { success: true, user: this.currentUser };
   };
 }
 
