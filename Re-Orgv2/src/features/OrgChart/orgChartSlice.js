@@ -1,7 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-<<<<<<< HEAD
   nodes: [
     // Sample roles
     {
@@ -9,27 +8,30 @@ const initialState = {
       type: 'role',
       data: {
         label: 'CEO',
-        responsibilities: ['Strategic Planning', 'Executive Leadership', 'Corporate Vision']
+        responsibilities: ['Strategic Planning', 'Executive Leadership', 'Corporate Vision'],
+        personnel: []
       },
-      position: { x: 50, y: 50 }
+      position: { x: 250, y: 50 }
     },
     {
       id: 'role-2',
       type: 'role',
       data: {
         label: 'HR Director',
-        responsibilities: ['Recruitment', 'Employee Relations', 'Training & Development']
+        responsibilities: ['Recruitment', 'Employee Relations', 'Training & Development'],
+        personnel: []
       },
-      position: { x: 200, y: 50 }
+      position: { x: 100, y: 200 }
     },
     {
       id: 'role-3',
       type: 'role',
       data: {
         label: 'IT Manager',
-        responsibilities: ['IT Infrastructure', 'Technical Support', 'Systems Administration']
+        responsibilities: ['IT Infrastructure', 'Technical Support', 'Systems Administration'],
+        personnel: []
       },
-      position: { x: 350, y: 50 }
+      position: { x: 400, y: 200 }
     },
     
     // Sample personnel
@@ -40,8 +42,7 @@ const initialState = {
         label: 'John Smith',
         title: 'Chief Executive Officer',
         skills: ['Leadership', 'Strategy', 'Business Development']
-      },
-      position: { x: 50, y: 200 }
+      }
     },
     {
       id: 'personnel-2',
@@ -50,8 +51,7 @@ const initialState = {
         label: 'Jane Doe',
         title: 'Human Resources Director',
         skills: ['Recruiting', 'Policy Development', 'Employee Relations']
-      },
-      position: { x: 200, y: 200 }
+      }
     },
     {
       id: 'personnel-3',
@@ -60,50 +60,34 @@ const initialState = {
         label: 'Mike Johnson',
         title: 'IT Manager',
         skills: ['Network Management', 'Cybersecurity', 'Cloud Computing']
-      },
-      position: { x: 350, y: 200 }
+      }
     }
   ],
   edges: [
-    // Sample connections between personnel and roles
     {
-      id: 'edge-personnel-1-role-1',
-      source: 'personnel-1',
-      target: 'role-1'
-    },
-    {
-      id: 'edge-personnel-2-role-2',
-      source: 'personnel-2',
+      id: 'edge-1-2',
+      source: 'role-1',
       target: 'role-2'
     },
     {
-      id: 'edge-personnel-3-role-3',
-      source: 'personnel-3',
+      id: 'edge-1-3',
+      source: 'role-1',
       target: 'role-3'
     }
   ],
   selectedNode: null,
-  viewMode: 'organization', // 'organization' or 'responsibilities'
+  loading: false,
+  error: null,
+  viewMode: 'chart'
 };
 
 export const orgChartSlice = createSlice({
-=======
-  nodes: [],
-  edges: [],
-  selectedNode: null,
-  loading: false,
-  error: null
-};
-
-const orgChartSlice = createSlice({
->>>>>>> ff2e79f1e6f7febe7a838a67b6ad7f42717fea94
   name: 'orgChart',
   initialState,
   reducers: {
     setNodes: (state, action) => {
       state.nodes = action.payload;
     },
-<<<<<<< HEAD
     
     setEdges: (state, action) => {
       state.edges = action.payload;
@@ -114,17 +98,26 @@ const orgChartSlice = createSlice({
     },
     
     updateNode: (state, action) => {
-      const { id, data } = action.payload;
+      const { id, data, position } = action.payload;
       const nodeIndex = state.nodes.findIndex(node => node.id === id);
       
       if (nodeIndex !== -1) {
-        state.nodes[nodeIndex] = {
-          ...state.nodes[nodeIndex],
-          data: {
-            ...state.nodes[nodeIndex].data,
-            ...data
-          }
-        };
+        const node = state.nodes[nodeIndex];
+        if (data) {
+          state.nodes[nodeIndex] = {
+            ...node,
+            data: {
+              ...node.data,
+              ...data
+            }
+          };
+        }
+        if (position) {
+          state.nodes[nodeIndex] = {
+            ...node,
+            position
+          };
+        }
       }
     },
     
@@ -134,6 +127,9 @@ const orgChartSlice = createSlice({
       state.edges = state.edges.filter(
         edge => edge.source !== nodeId && edge.target !== nodeId
       );
+      if (state.selectedNode?.id === nodeId) {
+        state.selectedNode = null;
+      }
     },
     
     addEdge: (state, action) => {
@@ -141,8 +137,8 @@ const orgChartSlice = createSlice({
     },
     
     removeEdge: (state, action) => {
-      const { id } = action.payload;
-      state.edges = state.edges.filter(edge => edge.id !== id);
+      const edgeId = action.payload;
+      state.edges = state.edges.filter(edge => edge.id !== edgeId);
     },
     
     setSelectedNode: (state, action) => {
@@ -155,6 +151,18 @@ const orgChartSlice = createSlice({
     
     setViewMode: (state, action) => {
       state.viewMode = action.payload;
+    },
+    
+    setLoading: (state, action) => {
+      state.loading = action.payload;
+    },
+    
+    setError: (state, action) => {
+      state.error = action.payload;
+    },
+    
+    clearError: (state) => {
+      state.error = null;
     },
     
     // Add a responsibility to a role
@@ -219,69 +227,10 @@ export const {
   addResponsibility,
   removeResponsibility,
   addSkill,
-  removeSkill
-=======
-    setEdges: (state, action) => {
-      state.edges = action.payload;
-    },
-    addNode: (state, action) => {
-      state.nodes.push(action.payload);
-      // Automatically create edges based on node hierarchy
-      if (state.nodes.length > 1) {
-        const newNode = action.payload;
-        const parentNode = state.nodes[state.nodes.length - 2];
-        state.edges.push({
-          id: `edge-${parentNode.id}-${newNode.id}`,
-          source: parentNode.id,
-          target: newNode.id,
-          type: 'smoothstep'
-        });
-      }
-    },
-    updateNode: (state, action) => {
-      const { id, data, position } = action.payload;
-      const node = state.nodes.find(n => n.id === id);
-      if (node) {
-        if (data) node.data = { ...node.data, ...data };
-        if (position) node.position = position;
-      }
-    },
-    deleteNode: (state, action) => {
-      const nodeId = action.payload;
-      state.nodes = state.nodes.filter(node => node.id !== nodeId);
-      state.edges = state.edges.filter(edge => 
-        edge.source !== nodeId && edge.target !== nodeId
-      );
-      if (state.selectedNode?.id === nodeId) {
-        state.selectedNode = null;
-      }
-    },
-    setSelectedNode: (state, action) => {
-      state.selectedNode = action.payload;
-    },
-    setLoading: (state, action) => {
-      state.loading = action.payload;
-    },
-    setError: (state, action) => {
-      state.error = action.payload;
-    },
-    clearError: (state) => {
-      state.error = null;
-    }
-  }
-});
-
-export const {
-  setNodes,
-  setEdges,
-  addNode,
-  updateNode,
-  deleteNode,
-  setSelectedNode,
+  removeSkill,
   setLoading,
   setError,
   clearError
->>>>>>> ff2e79f1e6f7febe7a838a67b6ad7f42717fea94
 } = orgChartSlice.actions;
 
 export default orgChartSlice.reducer; 

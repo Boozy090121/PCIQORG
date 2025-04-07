@@ -19,7 +19,7 @@ module.exports = {
           loader: 'babel-loader',
           options: {
             presets: ['@babel/preset-env', '@babel/preset-react'],
-            plugins: ['@babel/plugin-transform-class-properties']
+            plugins: ['@babel/plugin-transform-runtime']
           }
         }
       },
@@ -34,7 +34,7 @@ module.exports = {
     ]
   },
   resolve: {
-    extensions: ['.js', '.jsx'],
+    extensions: ['*', '.js', '.jsx'],
     alias: {
       '@': path.resolve(__dirname, 'Re-Orgv2/src'),
       '@components': path.resolve(__dirname, 'Re-Orgv2/src/components'),
@@ -48,7 +48,8 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: './Re-Orgv2/public/index.html'
+      template: './public/index.html',
+      filename: 'index.html'
     }),
     new webpack.DefinePlugin({
       'process.env': JSON.stringify(process.env)
@@ -58,10 +59,10 @@ module.exports = {
     static: {
       directory: path.join(__dirname, 'public'),
     },
-    historyApiFallback: true,
     port: 9000,
-    open: true,
-    hot: true
+    historyApiFallback: true,
+    hot: true,
+    open: true
   },
   devtool: 'inline-source-map'
 }; 

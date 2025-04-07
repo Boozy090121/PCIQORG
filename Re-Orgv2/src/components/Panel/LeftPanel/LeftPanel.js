@@ -29,7 +29,7 @@ import {
 } from '@mui/icons-material';
 import { useSelector, useDispatch } from 'react-redux';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { addNode, updateNode, deleteNode } from '../../../features/OrgChart/orgChartSlice';
+import { addNode, updateNode, removeNode } from '../../../features/OrgChart/orgChartSlice';
 
 const LeftPanel = () => {
   const dispatch = useDispatch();
@@ -82,7 +82,7 @@ const LeftPanel = () => {
 
   const handleDeleteClick = () => {
     if (selectedNode) {
-      dispatch(deleteNode(selectedNode.id));
+      dispatch(removeNode(selectedNode.id));
     }
     handleMenuClose();
   };
